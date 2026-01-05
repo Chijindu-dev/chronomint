@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
+import { PRESALE_ABI, PAYMENT_TOKEN_ABI } from '../../contracts/abis/index';
 import { useWallet } from '../../utils/WalletContext';
 import './PresaleCard.css';
 
@@ -36,7 +37,6 @@ const PresaleCard = () => {
           });
         
         // Get presale contract
-        const { PRESALE_ABI } = await import('../../contracts/abis/index');
         const presaleContract = new ethers.Contract(presaleAddress, PRESALE_ABI, provider);
         
         // Fetch presale data
@@ -50,7 +50,6 @@ const PresaleCard = () => {
         
         if (account) {
           // Get USDC balance
-          const { PAYMENT_TOKEN_ABI } = await import('../../contracts/abis/index');
           const usdcContract = new ethers.Contract(usdcAddress, PAYMENT_TOKEN_ABI, provider);
           const balance = await usdcContract.balanceOf(account);
           setUsdcBalance(parseFloat(ethers.formatUnits(balance, 6)));
@@ -121,7 +120,6 @@ const PresaleCard = () => {
       if (usdcAddress && ethers.isAddress(usdcAddress) && usdcAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa4' &&
           presaleAddress && ethers.isAddress(presaleAddress) && presaleAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa5') {
         // Get USDC contract
-        const { PAYMENT_TOKEN_ABI } = await import('../../contracts/abis/index');
         const usdcContract = new ethers.Contract(usdcAddress, PAYMENT_TOKEN_ABI, signer);
         
         // Convert amount to proper decimals (USDC has 6 decimals)
@@ -179,7 +177,6 @@ const PresaleCard = () => {
       
       if (presaleAddress && ethers.isAddress(presaleAddress) && presaleAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa5') {
         // Get presale contract
-        const { PRESALE_ABI } = await import('../../contracts/abis/index');
         const presaleContract = new ethers.Contract(presaleAddress, PRESALE_ABI, signer);
         
         // Convert amount to proper decimals (USDC has 6 decimals)

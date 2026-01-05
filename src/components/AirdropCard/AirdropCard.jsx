@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
+import { AIRDROP_ABI } from '../../contracts/abis/index';
 import { useWallet } from '../../utils/WalletContext';
 import './AirdropCard.css';
 
@@ -46,7 +47,6 @@ const AirdropCard = () => {
           });
         
         // Get airdrop contract
-        const { AIRDROP_ABI } = await import('../../contracts/abis/index');
         const airdropContract = new ethers.Contract(airdropAddress, AIRDROP_ABI, provider);
         
         // Check eligibility and if already claimed
@@ -106,7 +106,6 @@ const AirdropCard = () => {
         const signer = await provider.getSigner();
         
         // Get airdrop contract
-        const { AIRDROP_ABI } = await import('../../contracts/abis/index');
         const airdropContract = new ethers.Contract(airdropAddress, AIRDROP_ABI, signer);
         
         // Send claim transaction
