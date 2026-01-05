@@ -34,6 +34,19 @@
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 639px) {
+  .header-actions {
+    position: relative;
+    z-index: 1001;
+  }
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -127,13 +140,18 @@
   }
 }
 
+/* Show wallet connect on all screens */
 .wallet-wrapper {
-  display: none;
+  display: block;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 639px) {
   .wallet-wrapper {
-    display: block;
+    position: absolute;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1002;
   }
 }
 
@@ -145,6 +163,17 @@
 @media (min-width: 640px) {
   .mobile-wallet {
     display: none;
+  }
+}
+
+/* Show wallet connect in mobile menu on small screens */
+.mobile-wallet {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .mobile-wallet {
+    display: block;
   }
 }
 
