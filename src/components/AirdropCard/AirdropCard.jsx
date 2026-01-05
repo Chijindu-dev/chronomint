@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
 import { useWallet } from '../../utils/WalletContext';
 import './AirdropCard.css';
@@ -31,8 +32,36 @@ const AirdropCard = () => {
     setErrorMessage(null);
 
     try {
-      // Simulate API call with mock data
-      setTimeout(() => {
+      // Check if we have real contract addresses
+      const airdropAddress = CONTRACT_ADDRESSES.AIRDROP;
+      
+      if (airdropAddress && ethers.isAddress(airdropAddress) && airdropAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa6') {
+        // Try to fetch real eligibility data from blockchain
+        const provider = window.ethereum
+          ? new ethers.BrowserProvider(window.ethereum, "any")
+          : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
+            name: "tempo",
+            chainId: 42429,
+            ensAddress: null
+          });
+        
+        // Get airdrop contract
+        const { AIRDROP_ABI } = await import('../../contracts/abis/index');
+        const airdropContract = new ethers.Contract(airdropAddress, AIRDROP_ABI, provider);
+        
+        // Check eligibility and if already claimed
+        const isEligible = await airdropContract.isEligible(account);
+        const hasClaimed = await airdropContract.hasClaimed(account);
+        
+        if (hasClaimed) {
+          setClaimStatus('claimed');
+        } else if (isEligible) {
+          setClaimStatus('eligible');
+        } else {
+          setClaimStatus('not-eligible');
+        }
+      } else {
+        // Fallback to mock data for demo
         // Mock eligibility check - 70% chance of being eligible
         const isEligible = Math.random() > 0.3;
         const hasClaimed = Math.random() > 0.7; // 30% chance of already claimed
@@ -44,10 +73,10 @@ const AirdropCard = () => {
         } else {
           setClaimStatus('not-eligible');
         }
+      }
 
-        setStep('result');
-        setIsChecking(false);
-      }, 2000);
+      setStep('result');
+      setIsChecking(false);
     } catch (err) {
       console.error("Eligibility check failed:", err);
       // Even in error, we stay professional and show a clear message
@@ -62,14 +91,41 @@ const AirdropCard = () => {
     setErrorMessage(null);
 
     try {
-      // Simulate claiming process
-      setTimeout(() => {
-        setClaimStatus('claimed');
-        setIsChecking(false);
+      // Check if we have real contract addresses
+      const airdropAddress = CONTRACT_ADDRESSES.AIRDROP;
+      
+      if (airdropAddress && ethers.isAddress(airdropAddress) && airdropAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa6') {
+        const provider = window.ethereum
+          ? new ethers.BrowserProvider(window.ethereum, "any")
+          : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
+            name: "tempo",
+            chainId: 42429,
+            ensAddress: null
+          });
         
-        // Trigger data refresh across the app
-        window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'claim', timestamp: Date.now() } }));
-      }, 2000);
+        const signer = await provider.getSigner();
+        
+        // Get airdrop contract
+        const { AIRDROP_ABI } = await import('../../contracts/abis/index');
+        const airdropContract = new ethers.Contract(airdropAddress, AIRDROP_ABI, signer);
+        
+        // Send claim transaction
+        const tx = await airdropContract.claim();
+        setErrorMessage('Waiting for claim confirmation...');
+        
+        await tx.wait();
+        setClaimStatus('claimed');
+      } else {
+        // Fallback to mock for demo
+        setTimeout(() => {
+          setClaimStatus('claimed');
+        }, 2000);
+      }
+      
+      // Trigger data refresh across the app
+      window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'claim', timestamp: Date.now() } }));
+      
+      setIsChecking(false);
     } catch (err) {
       console.error("Claim failed:", err);
       const msg = "Transaction failed. Please check your balance.";

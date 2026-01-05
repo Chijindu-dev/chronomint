@@ -51,6 +51,14 @@ const Dashboard = () => {
         setIsConfigured(false);
         chronoFormatted = '1250.00'; // Mock data
       }
+      
+      // Log balance changes for debugging
+      console.log('Balance update:', {
+        tempo: tempoFormatted,
+        chrono: chronoFormatted,
+        usdc: usdcFormatted,
+        total: (parseFloat(tempoFormatted) + parseFloat(chronoFormatted) + parseFloat(usdcFormatted)).toFixed(2)
+      });
 
       // Fetch USDC Balance
       const usdcAddress = CONTRACT_ADDRESSES.PAYMENT_TOKEN;

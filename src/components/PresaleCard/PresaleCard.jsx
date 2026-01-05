@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
 import { useWallet } from '../../utils/WalletContext';
 import './PresaleCard.css';
@@ -19,16 +20,65 @@ const PresaleCard = () => {
 
   const fetchContractData = async () => {
     try {
-      // Mock data
-      setTotalRaised(6500); // 6500 USDC raised
-      setHardCap(10000); // 10000 USDC hard cap
-      setRate(100); // 100 CHRONO per USDC
-      if (account) {
-        setUsdcBalance(2500); // Mock USDC balance
-        setAllowance(1000); // Mock allowance
+      // Check if we have real contract addresses
+      const presaleAddress = CONTRACT_ADDRESSES.PRESALE;
+      const usdcAddress = CONTRACT_ADDRESSES.PAYMENT_TOKEN;
+      
+      if (presaleAddress && ethers.isAddress(presaleAddress) && presaleAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa5' &&
+          usdcAddress && ethers.isAddress(usdcAddress) && usdcAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa4') {
+        // Try to fetch real data from blockchain
+        const provider = window.ethereum
+          ? new ethers.BrowserProvider(window.ethereum, "any")
+          : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
+            name: "tempo",
+            chainId: 42429,
+            ensAddress: null
+          });
+        
+        // Get presale contract
+        const { PRESALE_ABI } = await import('../../contracts/abis/index');
+        const presaleContract = new ethers.Contract(presaleAddress, PRESALE_ABI, provider);
+        
+        // Fetch presale data
+        const totalRaised = await presaleContract.totalRaised();
+        const hardCap = await presaleContract.hardCap();
+        const rate = await presaleContract.rate();
+        
+        setTotalRaised(parseFloat(ethers.formatUnits(totalRaised, 6))); // USDC has 6 decimals
+        setHardCap(parseFloat(ethers.formatUnits(hardCap, 6)));
+        setRate(Number(rate));
+        
+        if (account) {
+          // Get USDC balance
+          const { PAYMENT_TOKEN_ABI } = await import('../../contracts/abis/index');
+          const usdcContract = new ethers.Contract(usdcAddress, PAYMENT_TOKEN_ABI, provider);
+          const balance = await usdcContract.balanceOf(account);
+          setUsdcBalance(parseFloat(ethers.formatUnits(balance, 6)));
+          
+          // Get allowance
+          const allowance = await usdcContract.allowance(account, presaleAddress);
+          setAllowance(parseFloat(ethers.formatUnits(allowance, 6)));
+        }
+      } else {
+        // Fallback to mock data
+        setTotalRaised(6500); // 6500 USDC raised
+        setHardCap(10000); // 10000 USDC hard cap
+        setRate(100); // 100 CHRONO per USDC
+        if (account) {
+          setUsdcBalance(2500); // Mock USDC balance
+          setAllowance(1000); // Mock allowance
+        }
       }
     } catch (err) {
-      console.error("Error fetching mock presale data:", err);
+      console.error("Error fetching presale data:", err);
+      // Fallback to mock data on error
+      setTotalRaised(6500);
+      setHardCap(10000);
+      setRate(100);
+      if (account) {
+        setUsdcBalance(2500);
+        setAllowance(1000);
+      }
     }
   };
 
@@ -54,12 +104,48 @@ const PresaleCard = () => {
     setStatus({ type: 'info', message: 'Requesting approval...' });
 
     try {
-      // Simulate approval process
-      setTimeout(() => {
+      const provider = window.ethereum
+        ? new ethers.BrowserProvider(window.ethereum, "any")
+        : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
+          name: "tempo",
+          chainId: 42429,
+          ensAddress: null
+        });
+      
+      const signer = await provider.getSigner();
+      
+      // Check if we have real contract addresses
+      const usdcAddress = CONTRACT_ADDRESSES.PAYMENT_TOKEN;
+      const presaleAddress = CONTRACT_ADDRESSES.PRESALE;
+      
+      if (usdcAddress && ethers.isAddress(usdcAddress) && usdcAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa4' &&
+          presaleAddress && ethers.isAddress(presaleAddress) && presaleAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa5') {
+        // Get USDC contract
+        const { PAYMENT_TOKEN_ABI } = await import('../../contracts/abis/index');
+        const usdcContract = new ethers.Contract(usdcAddress, PAYMENT_TOKEN_ABI, signer);
+        
+        // Convert amount to proper decimals (USDC has 6 decimals)
+        const amountInWei = ethers.parseUnits(amount, 6);
+        
+        // Send approval transaction
+        const tx = await usdcContract.approve(presaleAddress, amountInWei);
+        setStatus({ type: 'info', message: 'Waiting for approval confirmation...' });
+        
+        await tx.wait();
         setStatus({ type: 'success', message: 'Approval confirmed! You can now buy tokens.' });
-        setAllowance(parseFloat(amount)); // Update allowance to the approved amount
-        setIsLoading(false);
-      }, 2000);
+        
+        // Update allowance after approval
+        const allowance = await usdcContract.allowance(account, presaleAddress);
+        setAllowance(parseFloat(ethers.formatUnits(allowance, 6)));
+      } else {
+        // Fallback to mock for demo
+        setTimeout(() => {
+          setStatus({ type: 'success', message: 'Approval confirmed! You can now buy tokens.' });
+          setAllowance(parseFloat(amount)); // Update allowance to the approved amount
+        }, 2000);
+      }
+      
+      setIsLoading(false);
     } catch (err) {
       console.error(err);
       setStatus({ type: 'error', message: `Approval failed: ${err.message || "Unknown error"}` });
@@ -78,18 +164,48 @@ const PresaleCard = () => {
     setStatus({ type: 'info', message: 'Initiating purchase...' });
 
     try {
-      // Simulate purchase process
-      setTimeout(() => {
+      const provider = window.ethereum
+        ? new ethers.BrowserProvider(window.ethereum, "any")
+        : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
+          name: "tempo",
+          chainId: 42429,
+          ensAddress: null
+        });
+      
+      const signer = await provider.getSigner();
+      
+      // Check if we have real contract addresses
+      const presaleAddress = CONTRACT_ADDRESSES.PRESALE;
+      
+      if (presaleAddress && ethers.isAddress(presaleAddress) && presaleAddress !== '0x5FbDB2315678afecb367f032d93F642f64180aa5') {
+        // Get presale contract
+        const { PRESALE_ABI } = await import('../../contracts/abis/index');
+        const presaleContract = new ethers.Contract(presaleAddress, PRESALE_ABI, signer);
+        
+        // Convert amount to proper decimals (USDC has 6 decimals)
+        const amountInWei = ethers.parseUnits(amount, 6);
+        
+        // Send purchase transaction
+        const tx = await presaleContract.buyTokens(amountInWei);
+        setStatus({ type: 'info', message: 'Waiting for purchase confirmation...' });
+        
+        await tx.wait();
         setStatus({ type: 'success', message: 'Success! CHRONO tokens allocated to your wallet.' });
+        
+        // Clear the input amount
         setAmount('');
-        setUsdcBalance(prev => prev - parseFloat(amount)); // Update mock balance
-        setTotalRaised(prev => prev + parseFloat(amount)); // Update total raised
-        
-        // Trigger data refresh across the app
-        window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'purchase', timestamp: Date.now() } }));
-        
-        setIsLoading(false);
-      }, 2000);
+      } else {
+        // Fallback to mock for demo
+        setTimeout(() => {
+          setStatus({ type: 'success', message: 'Success! CHRONO tokens allocated to your wallet.' });
+          setAmount('');
+        }, 2000);
+      }
+      
+      // Trigger data refresh across the app
+      window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'purchase', timestamp: Date.now() } }));
+      
+      setIsLoading(false);
     } catch (err) {
       console.error("Purchase error:", err);
       setStatus({ type: 'error', message: `Failed: ${err.message || "Unknown error"}` });
