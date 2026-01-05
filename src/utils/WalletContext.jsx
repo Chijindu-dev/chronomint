@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { ethers } from 'ethers';
+import { TEMPO_NETWORK_PARAMS, isTempoNetwork, switchToTempoNetwork } from './tempoNetwork';
 
 const WalletContext = createContext();
 
@@ -8,19 +10,76 @@ export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [isWrongNetwork, setIsWrongNetwork] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const checkConnection = useCallback(async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum, "any");
+        const accounts = await provider.listAccounts();
+
+        if (accounts.length > 0) {
+          setAccount(accounts[0].address);
+          const network = await provider.getNetwork();
+          const currentChainId = network.chainId;
+          setChainId(currentChainId);
+          setIsWrongNetwork(!isTempoNetwork(currentChainId));
+        } else {
+          setAccount(null);
+        }
+      } catch (error) {
+        console.error("Connection check failed:", error);
+      }
+    }
+    setIsLoading(false);
+  }, []);
 
   const connect = async () => {
-    setIsLoading(true);
-    // Simulate connection delay
-    setTimeout(() => {
-      const mockAccount = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
-      setAccount(mockAccount);
-      setChainId(42429); // Tempo testnet chain ID
-      setIsWrongNetwork(false);
-      setIsLoading(false);
-    }, 1000);
+    if (typeof window.ethereum === 'undefined') {
+      alert("Please install MetaMask to use this dApp");
+      return;
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum, "any");
+      const accounts = await provider.send("eth_requestAccounts", []);
+      setAccount(accounts[0]);
+
+      const network = await provider.getNetwork();
+      setChainId(network.chainId);
+      setIsWrongNetwork(!isTempoNetwork(network.chainId));
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
+
+  useEffect(() => {
+    checkConnection();
+
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+        } else {
+          setAccount(null);
+        }
+      });
+
+      window.ethereum.on('chainChanged', (newChainId) => {
+        setChainId(newChainId);
+        setIsWrongNetwork(!isTempoNetwork(newChainId));
+        // Reload is recommended by MetaMask for chain changes
+        window.location.reload();
+      });
+    }
+
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', () => { });
+        window.ethereum.removeListener('chainChanged', () => { });
+      }
+    };
+  }, [checkConnection]);
 
   const disconnect = () => {
     setAccount(null);
@@ -35,7 +94,7 @@ export const WalletProvider = ({ children }) => {
     isLoading,
     connect,
     disconnect,
-    switchToTempoNetwork: () => {}
+    switchToTempoNetwork
   };
 
   return (
