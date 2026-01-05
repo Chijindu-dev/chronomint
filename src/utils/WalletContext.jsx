@@ -87,6 +87,11 @@ export const WalletProvider = ({ children }) => {
     setIsWrongNetwork(false);
   };
 
+  const refreshData = () => {
+    // Dispatch a custom event to notify other components to refresh their data
+    window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { timestamp: Date.now() } }));
+  };
+
   const value = {
     account,
     chainId,
@@ -94,7 +99,8 @@ export const WalletProvider = ({ children }) => {
     isLoading,
     connect,
     disconnect,
-    switchToTempoNetwork
+    switchToTempoNetwork,
+    refreshData
   };
 
   return (

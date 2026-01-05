@@ -84,6 +84,10 @@ const PresaleCard = () => {
         setAmount('');
         setUsdcBalance(prev => prev - parseFloat(amount)); // Update mock balance
         setTotalRaised(prev => prev + parseFloat(amount)); // Update total raised
+        
+        // Trigger data refresh across the app
+        window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'purchase', timestamp: Date.now() } }));
+        
         setIsLoading(false);
       }, 2000);
     } catch (err) {

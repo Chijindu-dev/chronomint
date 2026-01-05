@@ -89,7 +89,19 @@ const Dashboard = () => {
   useEffect(() => {
     fetchBalances();
     const interval = setInterval(fetchBalances, 10000); // Auto-refresh every 10s
-    return () => clearInterval(interval);
+    
+    // Listen for data refresh events
+    const handleDataRefresh = () => {
+      fetchBalances();
+      fetchActivity();
+    };
+    
+    window.addEventListener('dataRefresh', handleDataRefresh);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('dataRefresh', handleDataRefresh);
+    };
   }, [account]);
 
   const stats = [

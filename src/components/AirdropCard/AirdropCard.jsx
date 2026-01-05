@@ -66,6 +66,9 @@ const AirdropCard = () => {
       setTimeout(() => {
         setClaimStatus('claimed');
         setIsChecking(false);
+        
+        // Trigger data refresh across the app
+        window.dispatchEvent(new CustomEvent('dataRefresh', { detail: { action: 'claim', timestamp: Date.now() } }));
       }, 2000);
     } catch (err) {
       console.error("Claim failed:", err);
@@ -194,8 +197,14 @@ const AirdropCard = () => {
                 <div className="final-icon">✔</div>
                 <h3>Tokens Claimed</h3>
                 <p>Your CHRONO tokens have been successfully distributed to your wallet.</p>
-                <button className="btn-ghost font-tech" onClick={() => window.location.reload()}>
-                  Back to Portal
+                <button className="btn-ghost font-tech" onClick={() => {
+                  if (window.location.pathname === '/dashboard') {
+                    window.location.reload(); // Reload dashboard to see updated balances
+                  } else {
+                    window.location.href = '/dashboard'; // Go to dashboard to see updated balances
+                  }
+                }}>
+                  View Dashboard
                 </button>
               </div>
             )}

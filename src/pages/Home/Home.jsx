@@ -1,9 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import CountdownTimer from '../../components/CountdownTimer/CountdownTimer';
 
 const Home = () => {
+  const [showNotification, setShowNotification] = useState(false);
+  
+  useEffect(() => {
+    const handleDataRefresh = (event) => {
+      const { action } = event.detail || {};
+      if (action === 'purchase' || action === 'claim') {
+        setShowNotification(true);
+        // Hide notification after 5 seconds
+        setTimeout(() => setShowNotification(false), 5000);
+      }
+    };
+    
+    window.addEventListener('dataRefresh', handleDataRefresh);
+    
+    return () => {
+      window.removeEventListener('dataRefresh', handleDataRefresh);
+    };
+  }, []);
+  
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -19,6 +38,29 @@ const Home = () => {
 
   return (
     <div className="home-root">
+      {/* Notification for successful transactions */}
+      {showNotification && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className="notification-toast"
+        >
+          <div className="notification-content">
+            <div className="notification-icon">✓</div>
+            <div className="notification-text">
+              Transaction successful! Check your dashboard for updated balances.
+            </div>
+            <button 
+              className="notification-close"
+              onClick={() => setShowNotification(false)}
+            >
+              ×
+            </button>
+          </div>
+        </motion.div>
+      )}
+      
       {/* Visual background elements */}
       <div className="glow-overlay" style={{ top: '10%', left: '15%', width: '400px', height: '400px', background: 'var(--primary-glow)' }} />
       <div className="glow-overlay" style={{ bottom: '10%', right: '10%', width: '500px', height: '500px', background: 'var(--secondary-glow)' }} />
@@ -131,6 +173,60 @@ const Home = () => {
         .icon-box { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--primary); }
         .feature-card h3 { margin-bottom: 12px; font-size: 1.25rem; }
         .feature-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; }
+        
+        /* Notification toast */
+        .notification-toast {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 10000;
+          background: rgba(10, 10, 15, 0.95);
+          backdrop-filter: blur(10px);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+          max-width: 350px;
+        }
+        
+        .notification-content {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        
+        .notification-icon {
+          width: 24px;
+          height: 24px;
+          background: var(--success);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #000;
+          font-weight: bold;
+          font-size: 0.8rem;
+        }
+        
+        .notification-text {
+          flex: 1;
+          color: #fff;
+          font-size: 0.9rem;
+        }
+        
+        .notification-close {
+          background: none;
+          border: none;
+          color: var(--text-dim);
+          font-size: 1.2rem;
+          cursor: pointer;
+          padding: 0;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       `}</style>
     </div>
   );
