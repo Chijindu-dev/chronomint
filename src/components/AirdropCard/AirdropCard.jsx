@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { ethers } from 'ethers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
-import { AIRDROP_ABI } from '../../contracts/abis/index';
 import { useWallet } from '../../utils/WalletContext';
 import './AirdropCard.css';
 
@@ -33,65 +31,46 @@ const AirdropCard = () => {
     setErrorMessage(null);
 
     try {
-      const airdropAddress = CONTRACT_ADDRESSES.AIRDROP;
-      if (!airdropAddress || !ethers.isAddress(airdropAddress)) {
-        console.warn("Airdrop address is not yet configured.");
-        setClaimStatus('error');
+      // Simulate API call with mock data
+      setTimeout(() => {
+        // Mock eligibility check - 70% chance of being eligible
+        const isEligible = Math.random() > 0.3;
+        const hasClaimed = Math.random() > 0.7; // 30% chance of already claimed
+
+        if (hasClaimed) {
+          setClaimStatus('claimed');
+        } else if (isEligible) {
+          setClaimStatus('eligible');
+        } else {
+          setClaimStatus('not-eligible');
+        }
+
         setStep('result');
-        return;
-      }
-      const provider = new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
-        name: "tempo",
-        chainId: 42429,
-        ensAddress: null
-      });
-      const airdropContract = new ethers.Contract(airdropAddress, AIRDROP_ABI, provider);
-
-      const [eligible, claimed, amount] = await Promise.all([
-        airdropContract.isEligible(account),
-        airdropContract.hasClaimed(account),
-        airdropContract.AIRDROP_AMOUNT()
-      ]);
-
-      setAirdropAmount(ethers.formatEther(amount));
-
-      if (claimed) {
-        setClaimStatus('claimed');
-      } else if (eligible) {
-        setClaimStatus('eligible');
-      } else {
-        setClaimStatus('not-eligible');
-      }
-
-      setStep('result');
+        setIsChecking(false);
+      }, 2000);
     } catch (err) {
       console.error("Eligibility check failed:", err);
       // Even in error, we stay professional and show a clear message
       setClaimStatus('error');
       setStep('result');
-    } finally {
       setIsChecking(false);
     }
   };
 
   const handleClaim = async () => {
-    if (!window.ethereum) return;
     setIsChecking(true);
     setErrorMessage(null);
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum, "any");
-      const signer = await provider.getSigner();
-      const airdropContract = new ethers.Contract(CONTRACT_ADDRESSES.AIRDROP, AIRDROP_ABI, signer);
-
-      const tx = await airdropContract.claim({ gasLimit: 500000 });
-      await tx.wait();
-      setClaimStatus('claimed');
+      // Simulate claiming process
+      setTimeout(() => {
+        setClaimStatus('claimed');
+        setIsChecking(false);
+      }, 2000);
     } catch (err) {
       console.error("Claim failed:", err);
-      const msg = err.reason || err.shortMessage || "Transaction failed. Please check your balance.";
+      const msg = "Transaction failed. Please check your balance.";
       setErrorMessage(msg);
-    } finally {
       setIsChecking(false);
     }
   };
@@ -223,15 +202,11 @@ const AirdropCard = () => {
 
             {claimStatus === 'error' && (
               <div className="result-error">
-                <div className="error-badge">{CONTRACT_ADDRESSES.AIRDROP.startsWith('0x3456') ? 'Config Required' : 'Sync Failed'}</div>
-                <h3>{CONTRACT_ADDRESSES.AIRDROP.startsWith('0x3456') ? 'Setup Incomplete' : 'Network Timeout'}</h3>
-                <p>
-                  {CONTRACT_ADDRESSES.AIRDROP.startsWith('0x3456')
-                    ? "The Airdrop contract address is still set to a placeholder in addresses.js. Please update it with your deployed address."
-                    : "We couldn't reach the Tempo nodes. The contract may not be deployed yet at this address."}
-                </p>
+                <div className="error-badge">Sync Failed</div>
+                <h3>Network Timeout</h3>
+                <p>We couldn't reach the Tempo nodes. Please try again later.</p>
                 <button className="btn-ghost font-tech" onClick={() => setStep('initial')}>
-                  {CONTRACT_ADDRESSES.AIRDROP.startsWith('0x3456') ? 'Return' : 'Retry Check'}
+                  Retry Check
                 </button>
               </div>
             )}

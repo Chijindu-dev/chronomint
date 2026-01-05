@@ -11,9 +11,15 @@ export const WalletProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const connect = async () => {
-    // Mock connection for demo purposes
-    const mockAccount = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
-    setAccount(mockAccount);
+    setIsLoading(true);
+    // Simulate connection delay
+    setTimeout(() => {
+      const mockAccount = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+      setAccount(mockAccount);
+      setChainId(42429); // Tempo testnet chain ID
+      setIsWrongNetwork(false);
+      setIsLoading(false);
+    }, 1000);
   };
 
   const disconnect = () => {

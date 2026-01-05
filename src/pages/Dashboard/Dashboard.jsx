@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ethers } from 'ethers';
 import { useWallet } from '../../utils/WalletContext';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
-import { ERC20_ABI } from '../../contracts/abis/index';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -19,49 +17,15 @@ const Dashboard = () => {
   const fetchBalances = async () => {
     if (!account) return;
     try {
-      // Use window.ethereum as a preferred provider if available to ensure we see the user's view
-      const provider = window.ethereum
-        ? new ethers.BrowserProvider(window.ethereum, "any")
-        : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
-          name: "tempo",
-          chainId: 42429,
-          ensAddress: null
-        });
-
-      // Fetch Native TEMPO Balance
-      const nativeBalance = (await provider.getBalance(account));
-      const tempoFormatted = ethers.formatEther(nativeBalance);
-
-      // Fetch CHRONO Token Balance
-      const tokenAddress = CONTRACT_ADDRESSES.CHRONO_TOKEN;
-      if (!tokenAddress || !ethers.isAddress(tokenAddress)) {
-        setIsConfigured(false);
-        setBalances(prev => ({ ...prev, tempo: tempoFormatted }));
-        return;
-      }
-      setIsConfigured(true);
-
-      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-      const tokenBalance = await tokenContract.balanceOf(account);
-      const chronoFormatted = ethers.formatUnits(tokenBalance, 18);
-
-      // Fetch USDC Balance
-      const usdcAddress = CONTRACT_ADDRESSES.PAYMENT_TOKEN;
-      let usdcFormatted = '0.00';
-      if (usdcAddress && ethers.isAddress(usdcAddress)) {
-        const usdcContract = new ethers.Contract(usdcAddress, ERC20_ABI, provider);
-        const usdcBalance = await usdcContract.balanceOf(account);
-        usdcFormatted = ethers.formatUnits(usdcBalance, 6);
-      }
-
+      // Mock data for balances
       setBalances({
-        tempo: tempoFormatted,
-        chrono: chronoFormatted,
-        usdc: usdcFormatted,
-        totalValue: (parseFloat(tempoFormatted) + parseFloat(chronoFormatted) + parseFloat(usdcFormatted)).toFixed(2)
+        tempo: '12.56',
+        chrono: '1250.00',
+        usdc: '500.75',
+        totalValue: '2250.31'
       });
     } catch (err) {
-      console.error("Dashboard balance fetch failed. This usually happens if the contract is not deployed at the specified address or the RPC is down.", err);
+      console.error("Error fetching mock balances", err);
     }
   };
 
@@ -82,49 +46,22 @@ const Dashboard = () => {
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
 
   const fetchActivity = async () => {
-    if (!account || !CONTRACT_ADDRESSES.CHRONO_TOKEN || !ethers.isAddress(CONTRACT_ADDRESSES.CHRONO_TOKEN)) return;
+    if (!account) return;
 
     try {
       setIsLoadingActivity(true);
-      const provider = window.ethereum
-        ? new ethers.BrowserProvider(window.ethereum, "any")
-        : new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
-          name: "tempo",
-          chainId: 42429,
-          ensAddress: null
-        });
+      
+      // Mock activity data
+      const mockActivities = [
+        { action: 'Received CHRONO', amount: '100.00 CHRONO', status: 'Confirmed', date: 'Jan 5, 2026', hash: '0x1a2b...c3d4' },
+        { action: 'Sent CHRONO', amount: '50.00 CHRONO', status: 'Confirmed', date: 'Jan 4, 2026', hash: '0x5e6f...g7h8' },
+        { action: 'Received USDC', amount: '200.00 USDC', status: 'Confirmed', date: 'Jan 3, 2026', hash: '0x9i0j...k1l2' },
+        { action: 'Airdrop Claimed', amount: '1250.00 CHRONO', status: 'Confirmed', date: 'Jan 2, 2026', hash: '0xm3n4...o5p6' },
+      ];
 
-      const tokenContract = new ethers.Contract(CONTRACT_ADDRESSES.CHRONO_TOKEN, ERC20_ABI, provider);
-
-      // Filter for Transfer events involving the user
-      const filterFrom = tokenContract.filters.Transfer(account, null);
-      const filterTo = tokenContract.filters.Transfer(null, account);
-
-      const [sentLogs, receivedLogs] = await Promise.all([
-        tokenContract.queryFilter(filterFrom, -1000), // Check last 1000 blocks
-        tokenContract.queryFilter(filterTo, -1000)
-      ]);
-
-      const allLogs = [...sentLogs, ...receivedLogs].sort((a, b) => b.blockNumber - a.blockNumber);
-
-      const formattedActivities = await Promise.all(allLogs.slice(0, 10).map(async (log) => {
-        const block = await provider.getBlock(log.blockNumber);
-        const date = new Date(block.timestamp * 1000).toLocaleDateString();
-        const amount = ethers.formatEther(log.args[2]); // Assuming value is the 3rd arg
-        const isReceived = log.args[1].toLowerCase() === account.toLowerCase();
-
-        return {
-          action: isReceived ? 'Received CHRONO' : 'Sent CHRONO',
-          amount: `${parseFloat(amount).toFixed(2)} CHRONO`,
-          status: 'Confirmed',
-          date: date,
-          hash: `${log.transactionHash.substring(0, 6)}...${log.transactionHash.substring(62)}`
-        };
-      }));
-
-      setActivities(formattedActivities);
+      setActivities(mockActivities);
     } catch (error) {
-      console.error("Error fetching activity:", error);
+      console.error("Error fetching mock activity:", error);
     } finally {
       setIsLoadingActivity(false);
     }

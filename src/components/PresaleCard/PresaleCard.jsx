@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ethers } from 'ethers';
 import { motion } from 'framer-motion';
 import { CONTRACT_ADDRESSES } from '../../contracts/addresses';
-import { PRESALE_ABI, PAYMENT_TOKEN_ABI } from '../../contracts/abis/index';
 import { useWallet } from '../../utils/WalletContext';
 import './PresaleCard.css';
 
@@ -13,45 +11,24 @@ const PresaleCard = () => {
   const [status, setStatus] = useState(null);
 
   // Contract states
-  const [totalRaised, setTotalRaised] = useState(0n);
-  const [hardCap, setHardCap] = useState(10000n * 10n ** 6n); // 10,000 USDC (6 decimals)
-  const [rate, setRate] = useState(100n);
-  const [usdcBalance, setUsdcBalance] = useState(0n);
-  const [allowance, setAllowance] = useState(0n);
+  const [totalRaised, setTotalRaised] = useState(0);
+  const [hardCap, setHardCap] = useState(10000); // 10,000 USDC
+  const [rate, setRate] = useState(100); // 100 CHRONO per USDC
+  const [usdcBalance, setUsdcBalance] = useState(0);
+  const [allowance, setAllowance] = useState(0);
 
   const fetchContractData = async () => {
     try {
-      const presaleAddress = CONTRACT_ADDRESSES.PRESALE;
-      if (!presaleAddress || !ethers.isAddress(presaleAddress)) {
-        console.warn("Presale address is not yet configured.");
-        return;
-      }
-
-      const provider = new ethers.JsonRpcProvider("https://rpc.testnet.tempo.xyz", {
-        name: "tempo",
-        chainId: 42429,
-        ensAddress: null
-      });
-      const presaleContract = new ethers.Contract(presaleAddress, PRESALE_ABI, provider);
-      const paymentToken = new ethers.Contract(CONTRACT_ADDRESSES.PAYMENT_TOKEN, PAYMENT_TOKEN_ABI, provider);
-
-      const raised = await presaleContract.totalRaised();
-      const cap = await presaleContract.hardCap();
-      const currentRate = await presaleContract.rate();
-
-      setTotalRaised(raised);
-      setHardCap(cap);
-      setRate(currentRate);
-
-      // Fetch user's USDC balance and allowance if connected
+      // Mock data
+      setTotalRaised(6500); // 6500 USDC raised
+      setHardCap(10000); // 10000 USDC hard cap
+      setRate(100); // 100 CHRONO per USDC
       if (account) {
-        const balance = await paymentToken.balanceOf(account);
-        const approved = await paymentToken.allowance(account, presaleAddress);
-        setUsdcBalance(balance);
-        setAllowance(approved);
+        setUsdcBalance(2500); // Mock USDC balance
+        setAllowance(1000); // Mock allowance
       }
     } catch (err) {
-      console.error("Error fetching presale data:", err);
+      console.error("Error fetching mock presale data:", err);
     }
   };
 
@@ -61,10 +38,10 @@ const PresaleCard = () => {
     return () => clearInterval(interval);
   }, [account]);
 
-  const progress = hardCap > 0n ? Number((totalRaised * 10000n) / hardCap) / 100 : 0;
-  const totalRaisedFormatted = ethers.formatUnits(totalRaised, 6);
-  const hardCapFormatted = ethers.formatUnits(hardCap, 6);
-  const usdcBalanceFormatted = ethers.formatUnits(usdcBalance, 6);
+  const progress = hardCap > 0 ? (totalRaised * 10000) / hardCap / 100 : 0;
+  const totalRaisedFormatted = totalRaised.toFixed(2);
+  const hardCapFormatted = hardCap.toFixed(2);
+  const usdcBalanceFormatted = usdcBalance.toFixed(2);
 
   const handleApprove = async () => {
     if (!account) {
@@ -77,25 +54,15 @@ const PresaleCard = () => {
     setStatus({ type: 'info', message: 'Requesting approval...' });
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum, "any");
-      const signer = await provider.getSigner();
-      const paymentToken = new ethers.Contract(CONTRACT_ADDRESSES.PAYMENT_TOKEN, PAYMENT_TOKEN_ABI, signer);
-
-      const parsedAmount = ethers.parseUnits(amount, 6); // USDC has 6 decimals
-
-      const tx = await paymentToken.approve(CONTRACT_ADDRESSES.PRESALE, parsedAmount, {
-        gasLimit: 100000
-      });
-      setStatus({ type: 'info', message: 'Approval sent. Waiting for confirmation...' });
-      await tx.wait();
-
-      setStatus({ type: 'success', message: 'Approval confirmed! You can now buy tokens.' });
-      fetchContractData(); // Refresh allowance
+      // Simulate approval process
+      setTimeout(() => {
+        setStatus({ type: 'success', message: 'Approval confirmed! You can now buy tokens.' });
+        setAllowance(parseFloat(amount)); // Update allowance to the approved amount
+        setIsLoading(false);
+      }, 2000);
     } catch (err) {
       console.error(err);
-      const errorMessage = err.reason || err.shortMessage || err.message || "Unknown error";
-      setStatus({ type: 'error', message: `Approval failed: ${errorMessage}` });
-    } finally {
+      setStatus({ type: 'error', message: `Approval failed: ${err.message || "Unknown error"}` });
       setIsLoading(false);
     }
   };
@@ -111,49 +78,22 @@ const PresaleCard = () => {
     setStatus({ type: 'info', message: 'Initiating purchase...' });
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum, "any");
-      const signer = await provider.getSigner();
-      const presaleContract = new ethers.Contract(CONTRACT_ADDRESSES.PRESALE, PRESALE_ABI, signer);
-
-      const parsedAmount = ethers.parseUnits(amount, 6); // USDC has 6 decimals
-
-      // Check balance
-      if (usdcBalance < parsedAmount) {
-        throw new Error(`Insufficient USDC. You have ${usdcBalanceFormatted} but need ${amount}.`);
-      }
-
-      // Check allowance
-      if (allowance < parsedAmount) {
-        throw new Error("Insufficient allowance. Please approve first.");
-      }
-
-      setStatus({ type: 'info', message: 'Please confirm in wallet...' });
-      const tx = await presaleContract.buyTokens(parsedAmount, {
-        gasLimit: 300000
-      });
-
-      setStatus({ type: 'info', message: 'Transaction sent. Waiting for confirmation...' });
-      const receipt = await tx.wait();
-      console.log("Purchase confirmed:", receipt.hash);
-
-      setStatus({ type: 'success', message: 'Success! CHRONO tokens allocated to your wallet.' });
-      setAmount('');
-
-      // Refresh data
+      // Simulate purchase process
       setTimeout(() => {
-        fetchContractData();
+        setStatus({ type: 'success', message: 'Success! CHRONO tokens allocated to your wallet.' });
+        setAmount('');
+        setUsdcBalance(prev => prev - parseFloat(amount)); // Update mock balance
+        setTotalRaised(prev => prev + parseFloat(amount)); // Update total raised
+        setIsLoading(false);
       }, 2000);
     } catch (err) {
       console.error("Purchase error:", err);
-      const errorMessage = err.reason || err.shortMessage || err.message || "Unknown error";
-      setStatus({ type: 'error', message: `Failed: ${errorMessage}` });
-    } finally {
+      setStatus({ type: 'error', message: `Failed: ${err.message || "Unknown error"}` });
       setIsLoading(false);
     }
   };
 
-  const parsedAmount = amount ? ethers.parseUnits(amount, 6) : 0n;
-  const needsApproval = account && parsedAmount > 0n && allowance < parsedAmount;
+  const needsApproval = account && amount && parseFloat(amount) > 0 && allowance < parseFloat(amount);
 
   const getButtonText = () => {
     if (!account) return 'Connect Wallet';
@@ -208,7 +148,7 @@ const PresaleCard = () => {
             <span className="balance-label-text">Your USDC Balance</span>
             <span className="balance-value usdc">{parseFloat(usdcBalanceFormatted).toLocaleString()} USDC</span>
           </div>
-          {allowance > 0n && (
+          {allowance > 0 && (
             <div className="balance-row">
               <span className="balance-label-text">
                 <span className="approval-badge">
@@ -218,7 +158,7 @@ const PresaleCard = () => {
                   Approved
                 </span>
               </span>
-              <span className="balance-value">{parseFloat(ethers.formatUnits(allowance, 6)).toLocaleString()} USDC</span>
+              <span className="balance-value">{parseFloat(allowance).toLocaleString()} USDC</span>
             </div>
           )}
         </div>
@@ -239,7 +179,7 @@ const PresaleCard = () => {
           <div className="unit-tag">USDC</div>
         </div>
         <div className="receive-estimate">
-          You receive: <span className="text-primary font-tech">{(parseFloat(amount) * Number(rate) || 0).toLocaleString()} CHRONO</span>
+          You receive: <span className="text-primary font-tech">{(parseFloat(amount) * rate || 0).toLocaleString()} CHRONO</span>
         </div>
       </div>
 
