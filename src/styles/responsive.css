@@ -22,4 +22,15 @@
     width: 100%;
     padding: 16px;
   }
+  
+  .container {
+    padding: 0 16px;
+  }
+  
+  .btn-main {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

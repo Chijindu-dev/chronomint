@@ -35,7 +35,7 @@ const WalletConnect = () => {
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
-              <span>Secure Connect</span>
+              <span>Connect Wallet</span>
             </div>
           </motion.button>
         ) : (
@@ -253,6 +253,30 @@ const WalletConnect = () => {
         }
 
         .address-display { color: #fff; font-size: 0.9rem; letter-spacing: 0.02em; }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 639px) {
+          .wallet-dropdown {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: calc(100% - 32px);
+            max-width: 300px;
+            z-index: 1001;
+          }
+          
+          .premium-account-pill {
+            padding: 0 12px 0 16px;
+            height: 44px;
+          }
+          
+          .premium-connect-btn {
+            height: 44px;
+            padding: 0 20px;
+            font-size: 0.8rem;
+          }
+        }
       `}</style>
     </div>
   );
