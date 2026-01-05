@@ -1,0 +1,231 @@
+.purchase-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.badge-live {
+    padding: 4px 12px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: #00ff88;
+    font-weight: 700;
+}
+
+.allocation-box {
+    margin-bottom: 40px;
+}
+
+.alloc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.alloc-percent {
+    font-family: 'Space Grotesk';
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.25rem;
+}
+
+.progress-bar-bg {
+    height: 8px;
+    background: var(--bg-dark);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--btn-gradient);
+    border-radius: 10px;
+    position: relative;
+}
+
+.progress-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 20px;
+    background: #fff;
+    filter: blur(8px);
+    opacity: 0.5;
+}
+
+.alloc-foot {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.input-group {
+    margin-bottom: 32px;
+}
+
+.input-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.balance-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 16px 20px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.25rem;
+    font-family: 'Space Grotesk';
+    outline: none;
+    transition: 0.2s;
+}
+
+.input-wrapper input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.unit-tag {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.receive-estimate {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.purchase-btn {
+    width: 100%;
+    height: 56px;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-alert {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.status-alert.info {
+    background: rgba(0, 242, 255, 0.05);
+    color: var(--primary);
+    border-color: var(--primary-glow);
+}
+
+.status-alert.success {
+    background: rgba(0, 255, 136, 0.05);
+    color: #00ff88;
+    border-color: rgba(0, 255, 136, 0.2);
+}
+
+.status-alert.error {
+    background: rgba(255, 0, 122, 0.05);
+    color: var(--accent);
+    border-color: rgba(255, 0, 122, 0.2);
+}
+
+/* Wallet Balance Display */
+.wallet-balance-box {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(0, 242, 255, 0.03) 0%, rgba(255, 0, 122, 0.03) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.wallet-balance-box:hover {
+    border-color: var(--primary-glow);
+    box-shadow: 0 4px 20px rgba(0, 242, 255, 0.1);
+}
+
+.balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.balance-row+.balance-row {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.balance-label-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.balance-value {
+    font-family: 'Space Grotesk';
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.balance-value.usdc {
+    color: var(--primary);
+}
+
+.approval-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #00ff88;
+    font-weight: 600;
+}
+
+.approval-badge svg {
+    width: 12px;
+    height: 12px;
+}

@@ -1,0 +1,25 @@
+/* Global Responsive Overrides */
+
+@media (max-width: 1024px) {
+  :root {
+    --header-h: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --container-w: 100%;
+  }
+  
+  .section-title {
+    font-size: 2rem;
+  }
+}
+
+/* Touch targets for mobile */
+@media (max-width: 480px) {
+  .btn-main, .btn-ghost {
+    width: 100%;
+    padding: 16px;
+  }
+}
